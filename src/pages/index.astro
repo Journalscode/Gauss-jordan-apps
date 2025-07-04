@@ -1,11 +1,130 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+title: "Kalkulator Gauss-Jordan 3x3";
+import "../styles/global.css"
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Eliminasi Gauss-Jordan</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css" rel="stylesheet" />
+  </head>
+  <body class="bg-white min-h-screen flex flex-col items-center justify-center font-mono">
+    <div class="border-4 border-black shadow-[8px_8px_0_0_#000] rounded-none p-4 sm:p-8 w-full max-w-md bg-white mx-2">
+      <h1 class="text-2xl sm:text-3xl font-extrabold mb-6 text-center text-black uppercase tracking-widest border-b-4 border-black pb-2">Gauss-Jordan 3x3</h1>
+      <form id="gj-form" class="space-y-4">
+        <div class="space-y-3">
+          <div class="flex flex-wrap gap-2 items-center">
+            <input id="a00" type="number" class="w-16 p-2 border-2 border-black rounded-none bg-yellow-200 text-black font-bold focus:outline-none focus:ring-2 focus:ring-black" required />
+            <input id="a01" type="number" class="w-16 p-2 border-2 border-black rounded-none bg-yellow-200 text-black font-bold focus:outline-none focus:ring-2 focus:ring-black" required />
+            <input id="a02" type="number" class="w-16 p-2 border-2 border-black rounded-none bg-yellow-200 text-black font-bold focus:outline-none focus:ring-2 focus:ring-black" required />
+            <span class="mx-1 font-black text-xl">=</span>
+            <input id="a03" type="number" class="w-16 p-2 border-2 border-black rounded-none bg-yellow-200 text-black font-bold focus:outline-none focus:ring-2 focus:ring-black" required />
+          </div>
+          <div class="flex flex-wrap gap-2 items-center">
+            <input id="a10" type="number" class="w-16 p-2 border-2 border-black rounded-none bg-yellow-200 text-black font-bold focus:outline-none focus:ring-2 focus:ring-black" required />
+            <input id="a11" type="number" class="w-16 p-2 border-2 border-black rounded-none bg-yellow-200 text-black font-bold focus:outline-none focus:ring-2 focus:ring-black" required />
+            <input id="a12" type="number" class="w-16 p-2 border-2 border-black rounded-none bg-yellow-200 text-black font-bold focus:outline-none focus:ring-2 focus:ring-black" required />
+            <span class="mx-1 font-black text-xl">=</span>
+            <input id="a13" type="number" class="w-16 p-2 border-2 border-black rounded-none bg-yellow-200 text-black font-bold focus:outline-none focus:ring-2 focus:ring-black" required />
+          </div>
+          <div class="flex flex-wrap gap-2 items-center">
+            <input id="a20" type="number" class="w-16 p-2 border-2 border-black rounded-none bg-yellow-200 text-black font-bold focus:outline-none focus:ring-2 focus:ring-black" required />
+            <input id="a21" type="number" class="w-16 p-2 border-2 border-black rounded-none bg-yellow-200 text-black font-bold focus:outline-none focus:ring-2 focus:ring-black" required />
+            <input id="a22" type="number" class="w-16 p-2 border-2 border-black rounded-none bg-yellow-200 text-black font-bold focus:outline-none focus:ring-2 focus:ring-black" required />
+            <span class="mx-1 font-black text-xl">=</span>
+            <input id="a23" type="number" class="w-16 p-2 border-2 border-black rounded-none bg-yellow-200 text-black font-bold focus:outline-none focus:ring-2 focus:ring-black" required />
+          </div>
+        </div>
+        <button type="submit" class="w-full px-6 py-2 bg-pink-500 text-black border-2 border-black rounded-none font-extrabold uppercase shadow-[4px_4px_0_0_#000] hover:bg-pink-400 transition">Hitung</button>
+      </form>
+      <div id="hasil" class="mb-2 mt-6 text-center"></div>
+      <div id="langkah" class="max-w-md mx-auto"></div>
+    </div>
+    <script>
+      const gjForm = document.getElementById("gj-form");
+      if (gjForm) {
+        gjForm.onsubmit = function(e) {
+          e.preventDefault();
+
+          function val(id: string) {
+            const el = document.getElementById(id);
+            const v = el ? (el as HTMLInputElement).value : "";
+            return v === "" ? NaN : parseFloat(v);
+          }
+          let matrix = [
+            [val("a00"), val("a01"), val("a02"), val("a03")],
+            [val("a10"), val("a11"), val("a12"), val("a13")],
+            [val("a20"), val("a21"), val("a22"), val("a23")],
+          ];
+
+          if (matrix.flat().some(isNaN)) {
+            const hasilEl = document.getElementById("hasil");
+            if (hasilEl) {
+              hasilEl.innerHTML = `<div class="text-red-700 font-extrabold border-2 border-black bg-yellow-200 p-2 mt-4">Semua kolom harus diisi!</div>`;
+            }
+            const langkahEl = document.getElementById("langkah");
+            if (langkahEl) langkahEl.innerHTML = "";
+            return;
+          }
+
+          let steps = [];
+          const n = 3;
+
+          for (let i = 0; i < n; i++) {
+            let pivot = matrix[i][i];
+            if (pivot === 0) {
+              const hasilEl = document.getElementById("hasil");
+              if (hasilEl) {
+                hasilEl.innerHTML = `<div class="text-red-700 font-extrabold border-2 border-black bg-yellow-200 p-2 mt-4">Pivot pada baris ${i+1} nol, sistem tidak dapat diselesaikan dengan metode ini.</div>`;
+              }
+              const langkahEl = document.getElementById("langkah");
+              if (langkahEl) langkahEl.innerHTML = "";
+              return;
+            }
+            steps.push(`<span class="font-bold">Baris ${i + 1}</span> dibagi dengan pivot (<span class="font-bold">${pivot}</span>)`);
+            for (let j = 0; j <= n; j++) {
+              matrix[i][j] /= pivot;
+            }
+
+            for (let k = 0; k < n; k++) {
+              if (k !== i) {
+                let factor = matrix[k][i];
+                steps.push(`<span class="font-bold">Baris ${k + 1}</span> dikurangi <span class="font-bold">${factor.toFixed(2)}</span> × Baris ${i + 1}`);
+                for (let j = 0; j <= n; j++) {
+                  matrix[k][j] -= factor * matrix[i][j];
+                }
+              }
+            }
+          }
+
+          const result = matrix.map(row => Math.round(row[3]));
+
+          const hasilEl = document.getElementById("hasil");
+          if (hasilEl) {
+            hasilEl.innerHTML = `
+              <div class="bg-pink-200 border-2 border-black rounded-none p-3 mb-2 shadow-[4px_4px_0_0_#000]">
+                <h2 class="font-extrabold mb-2 text-black uppercase tracking-widest border-b-2 border-black pb-1">Hasil:</h2>
+                <div class="flex justify-center gap-4 text-xl font-extrabold">
+                  <span class="text-blue-900">x = ${result[0]}</span>
+                  <span class="text-blue-900">y = ${result[1]}</span>
+                  <span class="text-blue-900">z = ${result[2]}</span>
+                </div>
+              </div>
+            `;
+          }
+
+          const langkahEl = document.getElementById("langkah");
+          if (langkahEl) {
+            langkahEl.innerHTML = `
+              <div class="bg-yellow-200 border-2 border-black rounded-none p-3 mt-2 shadow-[4px_4px_0_0_#000]">
+                <h2 class="font-extrabold mb-2 text-black uppercase tracking-widest border-b-2 border-black pb-1">Langkah-langkah:</h2>
+                <ul class="list-decimal pl-6 space-y-1 text-base text-black font-bold">${steps.map(step => `<li>${step}</li>`).join('')}</ul>
+              </div>
+            `;
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
